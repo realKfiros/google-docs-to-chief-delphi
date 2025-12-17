@@ -1,10 +1,11 @@
 "use client";
 
-import {FormEvent, useMemo, useState} from "react";
+import {FormEvent, useEffect, useMemo, useState} from "react";
 import Markdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import styled from "styled-components";
 import {getGoogleDocsId} from "@/lib/validations/google-docs";
+import {Button} from "@/lib/components/Button";
 
 const PageContainer = styled.div`
 	max-width: calc(100vw - 20px);
@@ -12,6 +13,42 @@ const PageContainer = styled.div`
 	margin: 40px auto;
 	padding: 16px;
 	position: relative;
+	
+	> .page-title {
+		margin: 0 0 20px 0;
+	}
+	
+	> .document-form {
+		margin-bottom: 24px;
+		
+		> .field {
+			display: flex;
+			margin: 10px;
+			align-items: center;
+
+			> label {
+				display: block;
+				margin-bottom: 8px;
+				min-width: 150px;
+			}
+
+			> input {
+				margin-bottom: 8px;
+				border-radius: 4px;
+				border: 1px solid #ccc;
+				
+				&[type="text"] {
+					width: 100%;
+					padding: 8px;
+				}
+			}
+		}
+	}
+	
+	> .error-message {
+		color: #ff0000;
+		margin-bottom: 16px;
+	}
 
 	> .post {
 		position: relative;
@@ -55,11 +92,23 @@ const PageContainer = styled.div`
 	}
 `;
 export default function Page() {
+	const [titleColorsInput, setTitleColorsInput] = useState("#ff0000");
 	const [docInput, setDocInput] = useState("");
 	const docId = useMemo(() => getGoogleDocsId(docInput), [docInput]);
 	const [loading, setLoading] = useState(false);
 	const [result, setResult] = useState<{ title: string; text: string } | null>(null);
 	const [error, setError] = useState<string | null>(null);
+
+	useEffect(() => {
+		const colorFromStorage = localStorage.getItem("titleColorsInput");
+		if (colorFromStorage) {
+			setTitleColorsInput(colorFromStorage);
+		}
+	}, []);
+
+	useEffect(() => {
+		localStorage.setItem("titleColorsInput", titleColorsInput);
+	}, [titleColorsInput]);
 
 	const handleSubmit = async (e: FormEvent) =>
 	{
@@ -71,7 +120,7 @@ export default function Page() {
 		setResult(null);
 
 		try {
-			const res = await fetch(`/api/docs/${encodeURIComponent(docId)}`);
+			const res = await fetch(`/api/docs/${encodeURIComponent(docId)}?color=${titleColorsInput.split('#')[1]}`);
 			const data = await res.json();
 
 			if (!res.ok) {
@@ -89,43 +138,40 @@ export default function Page() {
 
 	return (
 		<PageContainer>
-			<h1>Google Docs to Open Alliance</h1>
+			<h1 className="page-title">Google Docs to Open Alliance Converter</h1>
 
-			<form onSubmit={handleSubmit} style={{marginBottom: 24}}>
-				<label style={{display: "block", marginBottom: 8}}>
-					Google Docs ID:
-				</label>
-				<input
-					type="text"
-					value={docInput}
-					onChange={(e) => setDocInput(e.target.value)}
-					style={{
-						width: "100%",
-						padding: 8,
-						marginBottom: 8,
-						borderRadius: 4,
-						border: "1px solid #ccc",
-					}}
-					placeholder="Document URL or ID"
-				/>
-				{docId && <button
+			<form
+				onSubmit={handleSubmit}
+				className="document-form">
+
+				<div className="field">
+					<label htmlFor="title-colors-input">Color for titles</label>
+					<input
+						type="color"
+						value={titleColorsInput}
+						onChange={(e) => setTitleColorsInput(e.target.value)}
+						id="title-colors-input" />
+				</div>
+
+				<div className="field">
+					<label htmlFor="doc-url-input">Google Docs URL</label>
+					<input
+						type="text"
+						value={docInput}
+						onChange={(e) => setDocInput(e.target.value)}
+						placeholder="Document URL"
+						id="doc-url-input" />
+				</div>
+
+				{docId && <Button
 					type="submit"
-					disabled={loading || !docInput}
-					style={{
-						padding: "8px 16px",
-						borderRadius: 4,
-						border: "none",
-						background: "#0070f3",
-						color: "#fff",
-						cursor: "pointer",
-					}}
-				>
+					disabled={loading || !docInput}>
 					{loading ? "Loading..." : "Read Document"}
-				</button>}
+				</Button>}
 			</form>
 
 			{error && (
-				<div style={{color: "red", marginBottom: 16}}>Error: {error}</div>
+				<div className="error-message">Error: {error}</div>
 			)}
 
 			{result && (
@@ -155,7 +201,10 @@ export default function Page() {
 								}}>
 								{result.text}
 							</Markdown>
-							<button onClick={() => navigator.clipboard.writeText(result?.text)}>Copy</button>
+							<Button
+								onClick={() => navigator.clipboard.writeText(result?.text)}>
+								Copy
+							</Button>
 						</div>
 					</div>
 				</div>
