@@ -3,7 +3,7 @@ import {center, coloredTitleText, embed, wrapText} from "@/lib/md/text_nodes";
 import {getYouTubeId} from "@/lib/validations/youtube";
 import JSZip from "jszip";
 
-const APP_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+const APP_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL;
 
 type GetMarkdownResult = {
 	title: string;
