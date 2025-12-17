@@ -7,6 +7,8 @@ import styled from "styled-components";
 import {getGoogleDocsId} from "@/lib/validations/google-docs";
 import {Button} from "@/lib/components/Button";
 
+const documentGuidelinesLink = "https://ninjas4744.blossom-kc.com/Launcher?assignment=274&anonymous=1";
+
 const PageContainer = styled.div`
 	max-width: calc(100vw - 20px);
 	min-width: 0;
@@ -16,6 +18,19 @@ const PageContainer = styled.div`
 	
 	> .page-title {
 		margin: 0 0 20px 0;
+	}
+	
+	> .page-description {
+		margin: 0 0 12px 0;
+	}
+	
+	> .instruction {
+		margin: 0 0 24px 0;
+		
+		a {
+			color: #0070f3;
+			text-decoration: underline;
+		}
 	}
 	
 	> .document-form {
@@ -139,6 +154,8 @@ export default function Page() {
 	return (
 		<PageContainer>
 			<h1 className="page-title">Google Docs to Open Alliance Converter</h1>
+			<p className="page-description">Write open alliance posts and updates on google docs and convert them to Chief Delphi's markdown</p>
+			<p className="instruction">To get the best results, use these <a href={documentGuidelinesLink} target="_blank">document formatting guidelines</a></p>
 
 			<form
 				onSubmit={handleSubmit}
