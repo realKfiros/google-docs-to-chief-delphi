@@ -14,8 +14,18 @@ export async function GET(req: Request, {params}: Params) {
 	}
 
 	try {
-		const doc = await getDocumentMarkdown(id, '#' + (searchParams.get('color') ?? 'ffffff'));
-		return NextResponse.json(doc);
+		const res = await getDocumentMarkdown(id, '#' + (searchParams.get('color') ?? 'ffffff'), true);
+		const zip = await res.file.generateAsync({type: 'nodebuffer'});
+		if (zip) {
+			return new NextResponse(new Uint8Array(zip), {
+				status: 200,
+				headers: new Headers({
+					'Content-Type': 'application/zip',
+					'Content-Disposition': `attachment; filename="${res.title || 'document'}.zip"`,
+				}),
+			});
+		}
+		return NextResponse.json(res);
 	} catch (err) {
 		console.error("Error reading doc:", err);
 		return NextResponse.json(

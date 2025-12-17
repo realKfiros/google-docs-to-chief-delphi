@@ -1,11 +1,19 @@
 import {getGoogleDocs} from "@/lib/docs";
 import {center, coloredTitleText, embed, wrapText} from "@/lib/md/text_nodes";
 import {getYouTubeId} from "@/lib/validations/youtube";
+import JSZip from "jszip";
 
 const APP_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
-export async function getDocumentMarkdown(documentId: string, color: string = '#2163af', exportOutput: boolean = false): Promise<{ title: string, text: string }> {
+type GetMarkdownResult = {
+	title: string;
+	text: string;
+	file: JSZip;
+};
+
+export async function getDocumentMarkdown(documentId: string, color: string = '#2163af', exportOutput: boolean = false): Promise<GetMarkdownResult> {
 	try {
+		const zip = new JSZip();
 		const docs = getGoogleDocs();
 		const res = await docs.documents.get({ documentId });
 
@@ -14,6 +22,8 @@ export async function getDocumentMarkdown(documentId: string, color: string = '#
 		const inlineObjects = (document.inlineObjects ?? {}) as Record<string, any>;
 
 		let isCodeBlock = false;
+		let imageIndex = 1;
+
 		const text = body.map((structuralElement) => {
 			const paragraph = structuralElement.paragraph;
 			if (!paragraph) {
@@ -48,7 +58,11 @@ export async function getDocumentMarkdown(documentId: string, color: string = '#
 			if (images.length > 0) {
 				return center(images.map((img) => {
 					const url = `${APP_BASE_URL}/api/docs/${documentId}/images/${img.objectId}`;
-					return `![image|${img.width}x${img.height}, 100%](${url})`;
+					if (exportOutput) {
+						zip.file(`${imageIndex}.png`, fetch(url).then(res => res.arrayBuffer()));
+						return `![Image ${imageIndex}](Drop here image ${imageIndex++}.png)`;
+					}
+					return `![Image ${imageIndex++}|${img.width}x${img.height}, 100%](${url})`;
 				}).join(" "));
 			}
 
@@ -97,14 +111,20 @@ export async function getDocumentMarkdown(documentId: string, color: string = '#
 			return paragraphText + "\n";
 		}).join("");
 
+		if (exportOutput) {
+			zip.file("post.md", text);
+		}
+
 		return {
 			title: document.title ?? "",
 			text,
+			file: zip,
 		};
 	} catch (e) {
 		return {
 			title: 'Error reading document',
 			text: e instanceof Error ? e.message : 'Unknown error',
+			file: new JSZip(),
 		}
 	}
 }

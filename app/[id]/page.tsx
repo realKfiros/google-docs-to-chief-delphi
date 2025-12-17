@@ -6,6 +6,7 @@ import {MD} from "@/lib/components/MD";
 import {Refresh} from "@/lib/components/buttons/Refresh";
 import {Copy} from "@/lib/components/buttons/Copy";
 import {ButtonGroup} from "@/lib/styles/ButtonGroup";
+import {Export} from "@/lib/components/buttons/Export";
 
 type Params = {
 	params: Promise<{id: string;}>;
@@ -24,6 +25,7 @@ export default async function ({params}: Params) {
 			<h1 className="page-title">{markdown.title}</h1>
 			<ButtonGroup>
 				<Refresh />
+				<Export docId={id} />
 				<Copy text={markdown.text} />
 			</ButtonGroup>
 			<Post>
