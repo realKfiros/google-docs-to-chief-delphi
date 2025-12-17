@@ -1,3 +1,5 @@
+"use client";
+
 import styled from "styled-components";
 
 export const Button = styled.button`
@@ -7,5 +9,4 @@ export const Button = styled.button`
 	background: #0070f3;
 	color: #fff;
 	cursor: pointer;
-	margin: 15px;
 `;
